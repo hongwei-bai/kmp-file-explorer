@@ -13,7 +13,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.melonapp.fileexplorer.domain.SomeUseCase
 import com.melonapp.fileexplorer.nav.NavViewModel
 import com.melonapp.fileexplorer.nav.Screen
 import com.melonapp.fileexplorer.nav.tabScreens
@@ -25,7 +24,7 @@ import org.koin.mp.KoinPlatform.getKoin
 
 @Composable
 @Preview
-fun App(useCase: SomeUseCase) {
+fun App() {
     val navViewModel: NavViewModel = getKoin().get()
     val currentScreen by navViewModel.currentScreen.collectAsState()
     val selectedTabIndex by navViewModel.selectedTabIndex.collectAsState()
@@ -90,16 +89,16 @@ fun App(useCase: SomeUseCase) {
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
-                ScreensContent(currentScreen, navViewModel, useCase)
+                ScreensContent(currentScreen, navViewModel)
             }
         }
     }
 }
 
 @Composable
-private fun ScreensContent(currentScreen: Screen, navViewModel: NavViewModel, useCase: SomeUseCase) {
+private fun ScreensContent(currentScreen: Screen, navViewModel: NavViewModel) {
     when (currentScreen) {
-        is Screen.Home -> HomeScreen(useCase = useCase, onNavigateToDetails = {
+        is Screen.Home -> HomeScreen(onNavigateToDetails = {
             navViewModel.navigate(Screen.Details("item-123"))
         })
 

@@ -7,8 +7,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
-    id("app.cash.sqldelight") version "2.0.1"
-    id("com.google.devtools.ksp")
+    alias(libs.plugins.ksp)
 }
 
 kotlin {
@@ -40,7 +39,6 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
-            implementation(libs.sqldelight.android.driver)
             implementation(libs.koin.android)
             implementation(libs.androidx.lifecycle.runtime.ktx)
             implementation(libs.androidx.lifecycle.common.java8)
@@ -58,7 +56,6 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
-            implementation(libs.sqldelight.runtime)
             implementation(libs.koin.core)
             // Koin for Compose Multiplatform - It doesn't support iOS
 //            implementation("io.insert-koin:koin-compose:1.0.1")
@@ -72,13 +69,11 @@ kotlin {
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
-            implementation(libs.sqldelight.sqlite.driver)
             implementation(libs.koin.core)
 
             implementation(libs.room.runtime)
         }
         iosMain.dependencies {
-            implementation(libs.sqldelight.native.driver)
             implementation(libs.koin.core)
         }
     }
@@ -132,19 +127,4 @@ compose.desktop {
     dependencies {
         ksp(libs.androidx.room.compiler)
     }
-}
-
-sqldelight {
-    databases {
-        create("AppDatabase") {
-            packageName.set("com.melonapp.fileexplorer.database")
-//            dialect(libs.sqlite.dialect)
-
-            // Optional: Add this if you want to generate a schema file
-            generateAsync.set(false)
-        }
-    }
-
-    // Optional: Link SQLDelight with Kotlin/Native memory model
-    linkSqlite.set(true)
 }

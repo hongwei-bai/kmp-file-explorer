@@ -22,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.melonapp.fileexplorer.Greeting
 import com.melonapp.fileexplorer.alarm.AlarmSetter
-import com.melonapp.fileexplorer.domain.SomeUseCase
 import com.melonapp.fileexplorer.notification.Notification.showNotification
 import kmp_file_explorer.composeapp.generated.resources.Res
 import kmp_file_explorer.composeapp.generated.resources.compose_multiplatform
@@ -30,7 +29,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.koin.mp.KoinPlatform.getKoin
 
 @Composable
-fun HomeScreen(useCase: SomeUseCase, onNavigateToDetails: () -> Unit) {
+fun HomeScreen(onNavigateToDetails: () -> Unit) {
     val viewModel: CounterViewModel = getKoin().get()
 
     val lifecycle = remember { _root_ide_package_.com.melonapp.fileexplorer.lifecycle.AppLifecycle() }
@@ -90,34 +89,6 @@ fun HomeScreen(useCase: SomeUseCase, onNavigateToDetails: () -> Unit) {
                     message = "Alarm cancelled"
                 }) {
                 Text("Cancel alarm")
-            }
-        }
-
-        Spacer(Modifier.height(8.dp))
-        Row {
-            Button(
-                onClick = {
-                    useCase.addUser("Mike", 18)
-                    message = "user Mike added."
-                }) {
-                Text("Add user")
-            }
-
-            Spacer(Modifier.width(8.dp))
-            Button(
-                onClick = {
-                    message = "user name is: ${useCase.getUserName()}"
-                }) {
-                Text("Get")
-            }
-
-            Spacer(Modifier.width(8.dp))
-            Button(
-                onClick = {
-                    useCase.clearAllUsers()
-                    message = "user cleared"
-                }) {
-                Text("Clear")
             }
         }
 
