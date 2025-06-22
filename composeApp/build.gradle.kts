@@ -8,6 +8,8 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
+    alias(libs.plugins.kotlin.native.cocoapods)
 }
 
 kotlin {
@@ -31,6 +33,18 @@ kotlin {
         }
     }
 
+    cocoapods {
+        version = "1.0.0"
+        summary = "Shared Kotlin Multiplatform module"
+        homepage = "https://example.com"
+        ios.deploymentTarget = "14.1"
+
+        framework {
+            baseName = "ComposeApp"
+            isStatic = true
+        }
+    }
+
     jvm("desktop")
 
     sourceSets {
@@ -43,8 +57,6 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtime.ktx)
             implementation(libs.androidx.lifecycle.common.java8)
             implementation(libs.androidx.lifecycle.process)
-
-            implementation(libs.room.runtime)
             implementation(libs.room.ktx)
         }
         commonMain.dependencies {
@@ -62,7 +74,7 @@ kotlin {
             implementation(libs.coroutines.core)
 
             implementation(libs.room.runtime)
-            implementation(libs.room.ktx)
+//            implementation(libs.room.ktx)
             implementation(libs.androidx.room.common)
             implementation(libs.androidx.sqlite.bundled)
         }
@@ -70,8 +82,6 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.koin.core)
-
-            implementation(libs.room.runtime)
         }
         iosMain.dependencies {
             implementation(libs.koin.core)
@@ -114,6 +124,18 @@ dependencies {
     debugImplementation(compose.uiTooling)
 }
 
+dependencies {
+    // KSP support for Room Compiler.
+    add("kspAndroid", libs.room.compiler)
+    add("kspIosSimulatorArm64", libs.room.compiler)
+    add("kspIosX64", libs.room.compiler)
+    add("kspIosArm64", libs.room.compiler)
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
+}
+
 compose.desktop {
     application {
         mainClass = "com.melonapp.fileexplorer.MainKt"
@@ -126,5 +148,22 @@ compose.desktop {
     }
     dependencies {
         ksp(libs.androidx.room.compiler)
+    }
+}
+
+if (!tasks.names.contains("syncFramework")) {
+    tasks.register("syncFramework") {
+        val platform = project.findProperty("kotlin.native.cocoapods.platform")?.toString()?.capitalize() ?: "Ios"
+        val archs = project.findProperty("kotlin.native.cocoapods.archs")?.toString()?.split(" ") ?: listOf("Arm64")
+        val configRaw = project.findProperty("kotlin.native.cocoapods.configuration")?.toString() ?: "Debug"
+        val config = configRaw.lowercase().replaceFirstChar { it.uppercase() }  // Normalize to 'Debug' or 'Release'
+
+        dependsOn(
+            *archs.map { arch ->
+                val taskName = "link${config}Framework${platform}${arch.capitalize()}"
+                println("syncFramework depends on $taskName")
+                tasks.named(taskName)
+            }.toTypedArray()
+        )
     }
 }
