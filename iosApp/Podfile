@@ -1,6 +1,3 @@
-platform :ios, '14.1'
-
 target 'iosApp' do
-  use_frameworks!
-  pod 'composeApp', :path => '../composeApp'
+  platform :ios, '14.1'
 end
