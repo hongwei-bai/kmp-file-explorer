@@ -48,6 +48,10 @@ kotlin {
     jvm("desktop")
 
     sourceSets {
+        all {
+            languageSettings.optIn("kotlin.experimental.ExperimentalObjCName")
+        }
+
         val desktopMain by getting
 
         androidMain.dependencies {
@@ -75,8 +79,8 @@ kotlin {
 
             implementation(libs.room.runtime)
 //            implementation(libs.room.ktx)
-            implementation(libs.androidx.room.common)
-            implementation(libs.androidx.sqlite.bundled)
+//            implementation(libs.room.common)
+            implementation(libs.sqlite.bundled)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -85,6 +89,7 @@ kotlin {
         }
         iosMain.dependencies {
             implementation(libs.koin.core)
+            implementation(libs.ktor.client.darwin)
         }
     }
 }
@@ -115,7 +120,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
     dependencies {
-        ksp(libs.androidx.room.compiler)
+        ksp(libs.room.compiler)
     }
 }
 
@@ -147,7 +152,7 @@ compose.desktop {
         }
     }
     dependencies {
-        ksp(libs.androidx.room.compiler)
+        ksp(libs.room.compiler)
     }
 }
 

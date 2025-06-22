@@ -7,6 +7,7 @@ fun initKoinIos() {
     startKoin {
         modules(
             module {
+                single { Factory() }
             },
             commonModule
         )

@@ -1,12 +1,12 @@
 package com.melonapp.fileexplorer.data
 
 import com.melonapp.fileexplorer.data.room.FileEntity
-import com.melonapp.fileexplorer.data.room.RoomDatabaseHelper
+import com.melonapp.fileexplorer.data.room.RoomAppDatabase
 
 class MyRepository(
-    private val roomDatabaseHelper: RoomDatabaseHelper
+    private val database: RoomAppDatabase
 ) {
-    private val dao = roomDatabaseHelper.roomAppDatabase.fileDao()
+    private val dao = database.fileDao()
 
     fun test() {
         println("test run!")
