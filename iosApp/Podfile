@@ -1,3 +1,0 @@
-target 'iosApp' do
-  platform :ios, '14.1'
-end

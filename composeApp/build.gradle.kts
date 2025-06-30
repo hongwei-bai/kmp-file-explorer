@@ -1,6 +1,7 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -9,7 +10,8 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
-    alias(libs.plugins.kotlin.native.cocoapods)
+    alias(libs.plugins.kotlinxSerialization)
+    alias(libs.plugins.skie)
 }
 
 kotlin {
@@ -20,6 +22,7 @@ kotlin {
         }
     }
 
+    val xcFramework = XCFramework()
     listOf(
         iosX64(),
         iosArm64(),
@@ -28,20 +31,7 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
             isStatic = true
-            // Required when using NativeSQLiteDriver
-            linkerOpts.add("-lsqlite3")
-        }
-    }
-
-    cocoapods {
-        version = "1.0.0"
-        summary = "Shared Kotlin Multiplatform module"
-        homepage = "https://example.com"
-        ios.deploymentTarget = "14.1"
-
-        framework {
-            baseName = "ComposeApp"
-            isStatic = true
+            xcFramework.add(this)
         }
     }
 
@@ -54,15 +44,6 @@ kotlin {
 
         val desktopMain by getting
 
-        androidMain.dependencies {
-            implementation(compose.preview)
-            implementation(libs.androidx.activity.compose)
-            implementation(libs.koin.android)
-            implementation(libs.androidx.lifecycle.runtime.ktx)
-            implementation(libs.androidx.lifecycle.common.java8)
-            implementation(libs.androidx.lifecycle.process)
-            implementation(libs.room.ktx)
-        }
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
@@ -72,26 +53,45 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
-            implementation(libs.koin.core)
-            // Koin for Compose Multiplatform - It doesn't support iOS
-//            implementation("io.insert-koin:koin-compose:1.0.1")
-            implementation(libs.coroutines.core)
-
-            implementation(libs.room.runtime)
-//            implementation(libs.room.ktx)
-//            implementation(libs.room.common)
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.androidx.room.runtime)
+            implementation(libs.androidx.paging.common)
             implementation(libs.sqlite.bundled)
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.kotlinx.json)
+            implementation(libs.skie.annotations)
+            implementation(libs.okio)
+            api(libs.androidx.datastore.core.okio)
+            implementation(libs.koin.core)
+        }
+        androidMain.dependencies {
+            implementation(compose.preview)
+            implementation(libs.androidx.activity.compose)
+            implementation(libs.androidx.room.paging)
+            implementation(libs.ktor.client.okhttp)
+            implementation(libs.koin.android)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
-            implementation(libs.koin.core)
+            implementation(libs.ktor.client.cio)
         }
         iosMain.dependencies {
-            implementation(libs.koin.core)
             implementation(libs.ktor.client.darwin)
         }
     }
+}
+
+dependencies {
+    add("kspAndroid", libs.androidx.room.compiler)
+    add("kspIosSimulatorArm64", libs.androidx.room.compiler)
+    add("kspIosX64", libs.androidx.room.compiler)
+    add("kspIosArm64", libs.androidx.room.compiler)
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 android {
@@ -119,26 +119,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    dependencies {
-        ksp(libs.room.compiler)
-    }
 }
 
 dependencies {
-    implementation(libs.androidx.foundation.layout.android)
     debugImplementation(compose.uiTooling)
-}
-
-dependencies {
-    // KSP support for Room Compiler.
-    add("kspAndroid", libs.room.compiler)
-    add("kspIosSimulatorArm64", libs.room.compiler)
-    add("kspIosX64", libs.room.compiler)
-    add("kspIosArm64", libs.room.compiler)
-}
-
-room {
-    schemaDirectory("$projectDir/schemas")
 }
 
 compose.desktop {
@@ -152,23 +136,13 @@ compose.desktop {
         }
     }
     dependencies {
-        ksp(libs.room.compiler)
+        ksp(libs.androidx.room.compiler)
     }
 }
 
-if (!tasks.names.contains("syncFramework")) {
-    tasks.register("syncFramework") {
-        val platform = project.findProperty("kotlin.native.cocoapods.platform")?.toString()?.capitalize() ?: "Ios"
-        val archs = project.findProperty("kotlin.native.cocoapods.archs")?.toString()?.split(" ") ?: listOf("Arm64")
-        val configRaw = project.findProperty("kotlin.native.cocoapods.configuration")?.toString() ?: "Debug"
-        val config = configRaw.lowercase().replaceFirstChar { it.uppercase() }  // Normalize to 'Debug' or 'Release'
-
-        dependsOn(
-            *archs.map { arch ->
-                val taskName = "link${config}Framework${platform}${arch.capitalize()}"
-                println("syncFramework depends on $taskName")
-                tasks.named(taskName)
-            }.toTypedArray()
-        )
+skie {
+    features {
+        // https://skie.touchlab.co/features/flows-in-swiftui
+        enableSwiftUIObservingPreview = true
     }
 }
